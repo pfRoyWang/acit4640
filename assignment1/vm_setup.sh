@@ -1,4 +1,8 @@
 #!/bin/bash
+
+SYSTEM_DIR=/etc/systemd/system
+NGINX_DIR=/etc/nginx
+
 cd setup
 sudo apt-get install sshpass -y
 
@@ -6,6 +10,7 @@ sshpass -p "P@ssw0rd" scp nginx.conf admin:~
 sshpass -p "P@ssw0rd" scp todoapp.service admin:~  
 
 sshpass -p "P@ssw0rd" ssh admin <<EOF
+
 	echo "P@ssw0rd" | sudo -S yum install git -y;
 	sudo yum install nodejs -y;
 	sudo yum install npm -y;
@@ -23,18 +28,18 @@ sshpass -p "P@ssw0rd" ssh admin <<EOF
 	sudo systemctl enable nginx
 	sudo systemctl start nginx
 
-	if [ ! -f /etc/nginx/nginx.service ]; then
-        	sudo mv ~/nginx.conf /etc/nginx/
+	if [ ! -f $NGINX_DIR/nginx.service ]; then
+        	sudo mv ~/nginx.conf $NGINX_DIR
 	else
-		sudo rm /etc/nginx/nginx.conf
-		sudo mv ~/nginx.conf /etc/nginx/
+		sudo rm $NGINX_DIR/nginx.conf
+		sudo mv ~/nginx.conf $NGINX_DIR
 	fi
 
-        if [ ! -f /etc/systemd/system/todoapp.service ]; then
-                sudo mv ~/todoapp.service /etc/systemd/system/
+        if [ ! -f $SYSTEM_DIR/todoapp.service ]; then
+                sudo mv ~/todoapp.service $SYSTEM_DIR
         else
-                sudo rm /etc/systemd/system/todoapp.service
-                sudo mv ~/todoapp.service /etc/systemd/system/
+                sudo rm $SYSTEM_DIR/todoapp.service
+                sudo mv ~/todoapp.service $SYSTEM_DIR
         fi
 
 	sudo chmod 755 /home/todoapp
@@ -44,12 +49,14 @@ sshpass -p "P@ssw0rd" ssh admin <<EOF
 		cd /home/todoapp/app
 		sudo npm install
       	else	
+		echo "Start Cloning"
 		cd /home/todoapp
                 sudo git clone https://github.com/timoguic/ACIT4640-todo-app.git
              	sudo mv ACIT4640-todo-app app
 		cd /home/todoapp/app
 		sudo npm install
         fi
+
 	sudo systemctl restart nginx
 	sudo systemctl daemon-reload
 	sudo systemctl enable todoapp
