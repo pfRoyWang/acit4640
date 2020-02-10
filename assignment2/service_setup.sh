@@ -26,8 +26,9 @@ create_vm(){
 	vbmg createvm --name "$VM_NAME" --ostype "RedHat_64" --register
 
 	vbmg modifyvm "$VM_NAME" --cpus 1
-	vbmg modifyvm "$VM_NAME" --memory 2480
+	vbmg modifyvm "$VM_NAME" --memory 2048
 	vbmg modifyvm "$VM_NAME" --audio "none"
+	vbmg modifyvm "$VM_NAME" --vram 16
 	vbmg modifyvm "$VM_NAME" --nic1 natnetwork
 	vbmg modifyvm "$VM_NAME" --nat-network1 "$NET_NAME"
 	vbmg modifyvm "$VM_NAME" --boot1 disk --boot2 net --boot3 none --boot4 none
@@ -36,12 +37,13 @@ create_vm(){
 	vbmg modifyvm "$PXE_VM" -nicl natnetwork
 	vbmg modifyvm "$PXE_VM" --nat-network2 "$NET_NAME"
 
-	vbmg createmedium disk --filename "$VM_NAME".vdi --size 10000 --format VDI 
+	vbmg createmedium disk --filename "$VM_NAME".vdi --size 10240 --format VDI 
+	vbmg modifyvm disk "$VM_NAME".vdi --mode "$VM_DIR"
 
-	vbmg storagectl "$VM_NAME" --name "SATA Controller" --add "sata" --controller "IntelAhci" 
+	vbmg storagectl "$VM_NAME" --name "SATA Controller" --add "sata" --controller "IntelAhci"  --bootable on
 	vbmg storageattach "$VM_NAME" --storagectl "SATA Controller" --port 0 --device 0 --type "hdd" --medium "$VM_DIR/$VM_NAME".vdi
 
-	vbmg storagectl "$VM_NAME" --name "IDE Controller" --add "ide" --controller "PIIX4"
+	vbmg storagectl "$VM_NAME" --name "IDE Controller" --add "ide" --controller "PIIX4" --bootable on
 	vbmg storageattach "$VM_NAME" --storagectl "IDE Controller" --port 1 --device 0 --type "dvddrive" --medium "emptydrive"
 }
 
