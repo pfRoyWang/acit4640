@@ -45,7 +45,7 @@ create_vm(){
 	vbmg storageattach "$VM_NAME" --storagectl "IDE Controller" --port 1 --device 0 --type "dvddrive" --medium "emptydrive"
 }
 
-start_vm(){
+start_pxe(){
 	vbmg startvm "$PXE_VM" 
 
 	while /bin/true; do 
@@ -70,13 +70,17 @@ send_files(){
 	    -q admin@localhost sudo mv /home/admin/setup /var/www/lighttpd/files/
 }
 
+start_vm(){
+	vbmg startvm "$VM_NAME"	
+}
 
 echo "Starting script..."
 
 clean_all
 create_network
 create_vm
-start_vm
+start_pxe
 send_files
+start_vm
 
 echo "DONE!"
