@@ -1,0 +1,6 @@
+#ignore the file
+module 5/packer.exe
+module 5/isos
+module 5/output
+module 5/todoapp_output
+module 5/packer_cache
