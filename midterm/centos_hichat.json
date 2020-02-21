@@ -1,0 +1,81 @@
+{
+  "description": "Packer basebox for 4640",
+  "variables": {
+    "admin_user": "admin",
+    "admin_passwd": "P@ssw0rd",
+    "iso_url": "./isos/CentOS-7-x86_64-Minimal-1908.iso",
+    "iso_checksum_url": "./isos/shasum.txt",
+    "iso_checksum_type": "sha256",
+    "http_directory": "./files/http",
+    "shutdown_command": "sudo poweroff "
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "output_directory": "./output",
+      "vm_name": "HICHAT",
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum_url": "{{ user `iso_checksum_url` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "http_directory": "{{ user `http_directory` }}",
+      "shutdown_command": "{{ user `shutdown_command` }}",
+      "ssh_username": "{{ user `admin_user` }}",
+      "ssh_password": "{{ user `admin_passwd` }}",
+      "ssh_timeout": "20m",
+      "ssh_pty": "true",
+      "boot_command": [
+        "<up><wait><tab><wait> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "format": "ova",
+      "guest_os_type": "RedHat_64",
+      "guest_additions_mode": "disable",
+      "hard_drive_interface": "sata",
+      "hard_drive_nonrotational": true,
+      "hard_drive_discard": true,
+      "memory": "1536",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--nictype1",
+          "virtio"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+	  "type": "shell",
+	  "inline": [
+	      "mkdir /home/{{ user `admin_user`}}/.ssh/",
+	      "chown {{ user `admin_user`}}:{{ user `admin_user`}} -R /home/{{ user `admin_user`}}/.ssh/ "    
+	  ]
+    {
+      "type": "file",
+      "source": "./files/hichat.service",
+      "destination": "~/hichat.service"
+    },
+    {
+      "type": "file",
+      "source": "./files/nginx.conf",
+      "destination": "~/nginx.conf"
+    },
+    {
+      "type":"shell",
+      "inline": [
+        "sudo chmod 755 /app",
+        "sudo mv ~/hichat.service /etc/systemd/system/hichat.service",
+        "cd /app",
+        "sudo git clone https://github.com/wayou/HiChat.git",
+        "cd /app/HiChat",
+        "sudo chmod 755 /app/HiChat",
+        "sudo npm install",
+        "sudo mv ~/nginx.conf /etc/nginx/nginx.conf",
+        "sudo systemctl restart nginx",
+        "sudo systemctl daemon-reload",
+        "sudo systemctl enable hichat",
+        "sudo systemctl start hichat"
+      ]
+    }
+  ]
+}
