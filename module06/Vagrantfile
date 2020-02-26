@@ -1,0 +1,51 @@
+Vagrant.configure("2") do |config|
+	config.vm.box = "basebox_4640"
+  config.ssh.username = "admin"
+  config.ssh.password ="P@ssw0rd"
+  #config.ssh.private_key_path = "./files/acit_admin_id_rsa"
+
+  config.vm.define "todoapp" do |todoapp|
+        todoapp.vm.hostname = "todoapp.bcit.local"
+      	todoapp.vm.network "forwarded_port", guest: 80, host: 12080
+      	todoapp.vm.synced_folder ".", "/vagrant", disabled: true
+      	todoapp.vm.provision "file", source: "./files/nginx.conf", destination: "/home/admin/nginx.conf"
+      	todoapp.vm.provision "file", source: "./files/todoapp.service", destination: "/home/admin/todoapp.service"
+      	todoapp.vm.provision "file", source: "./files/database.js", destination: "/home/admin/database.js"
+      	todoapp.vm.provision "file", source: "./files/mongodb_ACIT4640.tgz", destination: "/home/admin/mongodb_ACIT4640.tgz"
+      	todoapp.vm.provision "shell", inline: <<-SHELL
+          	setenforce 0
+          	yum -y install nginx
+          	yum -y install git
+          	yum -y install mongodb-server 
+          	yum -y install mongodb
+          	systemctl enable mongod	
+          	systemctl start mongod
+          	systemctl enable nginx
+          	systemctl start nginx
+        		tar zxf /home/admin/mongodb_ACIT4640.tgz 
+        		export LANG=C
+        		rm /etc/nginx/nginx.conf
+        		mv /home/admin/nginx.conf /etc/nginx/nginx.conf
+        		mv /home/admin/todoapp.service /etc/systemd/system/todoapp.service
+        		chmod 755 /home/admin
+        		echo "Start Cloning"
+        		git clone https://github.com/timoguic/ACIT4640-todo-app.git
+          	mv ACIT4640-todo-app app
+        		cd /home/admin/app
+        		npm install
+        		cd config
+        		rm database.js
+        		mv /home/admin/database.js /home/admin/app/config/database.js
+        		mongorestore -d acit4640 /home/admin/ACIT4640
+        		systemctl restart nginx
+        		systemctl daemon-reload
+        		systemctl enable todoapp
+        		systemctl start todoapp
+	SHELL
+  todoapp.vm.provider "virtualbox" do |vb|
+        vb.name = "TODO-4640"
+        vb.linked_clone = true
+  end
+  end
+end
+

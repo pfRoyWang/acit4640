@@ -4,13 +4,12 @@ SYSTEM_DIR=/etc/systemd/system
 NGINX_DIR=/etc/nginx
 
 cd setup
-sudo apt-get install sshpass -y
 
-sshpass -p "P@ssw0rd" scp nginx.conf admin:~
-sshpass -p "P@ssw0rd" scp todoapp.service admin:~  
 
-sshpass -p "P@ssw0rd" ssh admin <<EOF
+sudo scp -i ~/.ssh/acit_admin_id_rsa -P 12022 nginx.conf admin@localhost:~
+sudo scp -i ~/.ssh/acit_admin_id_rsa -P 12022 todoapp.service admin@localhost:~  
 
+ssh -i ~/.ssh/acit_admin_id_rsa -p 12022 -t admin@localhost <<EOF
 	echo "P@ssw0rd" | sudo -S yum install git -y;
 	sudo yum install nodejs -y;
 	sudo yum install npm -y;
