@@ -1,0 +1,96 @@
+---
+- hosts: all
+  vars:
+    admin_user_name: admin
+    todoapp_user: todoapp
+  tasks:
+    - name: copy the needed file
+      become: yes
+      copy:
+        src: 
+          - ./files/nginx.conf
+          - ./files/todoapp.service
+          - ./files/database.js
+          - ./files/mongodb_ACIT4640.tgz
+        dest: /home/{{ admin_user_name }}/
+        owner: {{ admin_user_name }}
+        mode: 0755
+    - name: disable SElinux
+      become: yes
+      selinux: state=disabled
+    - name: install required software
+      become: yes
+      package:
+        name: 
+          - nginx
+          - git
+          - mongodb-server
+          - mongodb
+        state: installed
+    - name: create todoapp user 
+      become: yes
+      user: 
+        name: "{{ todoapp_user }}"
+        password: P@ssword
+    - name: enable services 
+      become: yes
+      service:
+        name: 
+          - mongodb-server
+          - nginx
+          - mongodb
+        enabled: yes
+        state: started
+    - name: extract mongodb_ACIT4640.tgz
+      become: yes
+      unarchive:
+        src: /home/{{ admin_user_name }}/mongodb_ACIT4640.tgz
+        dest: /home/{{ admin_user_name }}/
+    - name: remove the existing nginx.conf
+      become: yes
+      file:
+        path: /etc/nginx/nginx.conf
+        state: absent
+    - name: move the updated nginx file to nginx config folder
+      become: yes
+      command: mv /home/admin/nginx.conf /etc/nginx/nginx.conf
+    - name: move the todoapp.service to systemd folder
+      become: yes
+      command: mv /home/admin/todoapp.service /etc/systemd/system/todoapp.service
+    - name: change /home/todoapp folder permission
+      become: yes
+      file:
+        path: /home/{{ todoapp_user }}
+        mode: 0755
+    - name: cloning the files from git
+      become: yes
+      git: 
+        repo: 'https://github.com/timoguic/ACIT4640-todo-app.git'
+        dest: /home/{{ todoapp_user }}
+    - name: change the cloned folder name
+      become: yes
+      command: mv /home/{{ todoapp_user }}/ACIT4640-todo-app /home/{{ todoapp_user }}/app
+    - name: install package in app folder
+      become: yes
+      npm:
+        path: /home/{{ todoapp_user }}/app/
+    - name: remove the database.js in app folder and move the updated databse.js to app folder
+      become: yes
+      command:
+        - rm /home/{{ todoapp_user }}/app/database.js
+        - mv /home/{{ admin_user_name }}/database.js /home/{{ todoapp_user }}/app/database.js
+        - mongorestore -d acit4640 /home/{{ admin_user_name }}/ACIT_4640
+    - name: restarting the nginx service
+      become: yes
+      service:
+        name: nginx
+        state: restarted 
+    - name: reload the system daemon
+      systemd:
+        daemon_reload: yes
+    - name: enable and start the todoapp service
+      become: yes
+      service: 
+        name: todoapp
+        enabled: yes
+        state: started
