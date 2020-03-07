@@ -5,6 +5,9 @@ module 5/output
 module 5/todoapp_output
 module 5/packer_cache
 midterm
+<<<<<<< HEAD
 assignment4/base_4640.box
 assignment4/.vagrant
 module06/base_4640.box
+=======
+>>>>>>> 788b1dce400fd99f0a26a99275258964bb4b64b6
