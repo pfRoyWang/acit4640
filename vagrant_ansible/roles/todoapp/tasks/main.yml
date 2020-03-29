@@ -1,0 +1,96 @@
+---
+- name: disable SElinux
+  become: yes
+  selinux: 
+    state: disabled
+
+- name: create todoapp user 
+  become: yes
+  user: 
+    name: todoapp
+    password: P@ssword
+
+- name: provision the todoapp configuration file
+  become: yes
+  template:
+    src: todoapp.service
+    dest: /etc/systemd/system/todoapp.service
+
+- name: reload the system daemon
+  become: yes
+  systemd:
+    daemon_reload: yes
+
+- name: enable and start the todoapp service
+  become: yes
+  service: 
+    name: todoapp
+    enabled: yes
+    state: started
+
+
+- name: extract mongodb_ACIT4640.tgz
+  become: yes
+  unarchive:
+    src: ./roles/todoapp/templates/mongodb_ACIT4640.tgz
+    dest: /home/admin/
+
+
+- name: change /home/todoapp folder permission
+  become: yes
+  file:
+    path: /home/todoapp
+    mode: 0755
+
+- name: remove the existing app folder 
+  become: yes
+  file:
+    path: /home/todoapp/app
+    state: absent
+
+- name: cloning the files from git
+  become: yes
+  git: 
+    repo: 'https://github.com/timoguic/ACIT4640-todo-app.git'
+    dest: /home/todoapp/app
+
+- name: install packages in app folder
+  become: yes
+  npm:
+    path: /home/todoapp/app/
+
+- name: remove the database.js in app folder
+  become: yes
+  file:
+    path: /home/todoapp/app/config/database.js
+    state: absent
+
+- name: provision the database configuration file
+  become: yes
+  template:
+    src: database.js
+    dest: /home/todoapp/app/config/database.js
+
+- name: remove the server.js in app folder
+  become: yes
+  file:
+    path: /home/todoapp/app/server.js
+    state: absent
+
+- name: provision the server configuration file
+  become: yes
+  template:
+    src: server.js
+    dest: /home/todoapp/app/server.js
+
+- name: use the backup database
+  become: yes
+  command:
+    cmd: mongorestore -d acit4640 /home/admin/ACIT4640
+  notify: restart the todoapp service
+
+  
+
+
+
+
