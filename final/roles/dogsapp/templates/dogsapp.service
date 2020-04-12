@@ -1,0 +1,15 @@
+
+[Unit]
+Description=Dogs app, ACIT4640 Final
+After=network.target
+
+[Service]
+Environment=NODE_PORT=3000
+WorkingDirectory=/home/dogsapp/app
+Type=simple
+User=centos
+ExecStart=/usr/bin/node /home/dogsapp/app/app.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

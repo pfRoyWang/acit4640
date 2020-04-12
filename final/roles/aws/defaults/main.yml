@@ -1,0 +1,8 @@
+---
+aws_region: us-west-2
+ec2_instance_name: ACIT4640_FINAL
+vpc_name: FINAL_VPC
+subnet_name: FINAL_SUBNET
+igw_name: FINAL_IGW
+route_name: FINAL_ROUTE
+group_name: FINAL_SECURITY_GROUP

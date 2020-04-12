@@ -1,0 +1,9 @@
+---
+- name: get the dogsapp status
+  become: yes
+  command: systemctl status dogsapp.service
+  register: result
+
+- name: show the dogsapp status
+  debug:
+    var: result.stdout_lines

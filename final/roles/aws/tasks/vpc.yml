@@ -1,0 +1,59 @@
+---
+- name: create VPC
+  ec2_vpc_net: 
+    cidr_block: 10.46.0.0/16
+    name: FINAL_VPC
+    region: "{{ aws_region }}"
+    state: present
+  register: vpc_data
+- name: create subnet
+  ec2_vpc_subnet:
+    az: us-west-2a
+    cidr: 10.46.10.0/24
+    region: "{{ aws_region }}"
+    state: present
+    vpc_id: "{{ vpc_data.vpc.id }}"
+    tags:
+      Name: FINAL_SUBNET
+  register: subnet_data
+- name: add internet gateway to VPC
+  ec2_vpc_igw:
+    vpc_id: "{{ vpc_data.vpc.id }}"
+    tags:
+      Name: FINAL_IGW
+    state: present
+    region: "{{ aws_region }}"
+  register: igw_data
+- name: add routing table
+  ec2_vpc_route_table:
+    tags:
+      Name: FINAL_ROUTE
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc_data.vpc.id }}"
+    subnets: "{{ subnet_data.subnet.id }}"
+    state: present
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw_data.gateway_id }}"
+  register: route_table_data
+- name: add security group
+  ec2_group:
+    name: FINAL_SECURITY_GROUP
+    state: present
+    vpc_id: "{{ vpc_data.vpc.id }}"
+    region: "{{ aws_region }}"
+    description: SSH Port and HTTP Port
+    rules:
+      - proto: tcp
+        ports: 22
+        cidr_ip: 66.183.130.210/32
+        rule_desc: allow traffic on port 22 from my own ip
+      - proto: tcp
+        ports: 80
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all on port 80
+      - proto: tcp
+        ports: 3000
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow access nodejs app on port 3000 from laptop
+  register: security_group_data

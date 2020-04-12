@@ -1,0 +1,30 @@
+---
+- name: EC2 instance
+  ec2: 
+    instance_type: t2.micro
+    image: ami-01ed306a12b7d1c96
+    vpc_subnet_id: "{{ subnet_data.subnet.id }}"
+    instance_tags:
+      Name: "{{ ec2_instance_name }}"
+    exact_count: 1
+    count_tag:
+      Name: "{{ ec2_instance_name }}"
+    key_name: aws_private_key
+    region: "{{ aws_region }}"
+    group_id: "{{ security_group_data.group_id }}"
+    volumes:
+      - device_name: /dev/sda1
+        volume_type: gp2
+        volume_size: 8
+    wait: yes
+  register: ec2_data
+- name: elastic ip
+  ec2_eip:
+    device_id: "{{ ec2_data.tagged_instances[0].id }}"
+    region: "{{ aws_region }}"
+  register: eip_data
+- name: output the elastic ip
+  debug:
+    msg: "{{ eip_data.public_ip }}"
+- name: refresh Ansible inventory
+  meta: refresh_inventory

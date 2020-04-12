@@ -1,0 +1,106 @@
+---
+- name: update all packages
+  become: yes
+  yum:
+    name: '*'
+    state: latest
+
+- name: add epel packages
+  become: yes
+  yum:
+    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    state: present
+
+- name: install services
+  become: yes
+  yum: 
+    name:
+      - nginx 
+      - git
+      - nodejs
+      - mongodb-server
+      - mongodb
+      - tar
+    state: present
+    update_cache: true
+
+- name: Start service mongod, if not started
+  become: yes
+  service:
+    name: mongod
+    state: started
+
+
+- name: remove the existing nginx configuration file
+  become: yes
+  file:
+    path: /etc/nginx/nginx.conf
+    state: absent
+
+- name: provision the nginx configuration file
+  become: yes
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: restart nginx
+  
+- name: disable SElinux
+  become: yes
+  selinux: 
+    state: disabled
+
+- name: create dogsapp user 
+  become: yes
+  user: 
+    name: dogsapp
+    password: P@ssword
+
+- name: provision the dogsapp service configuration file
+  become: yes
+  template:
+    src: dogsapp.service
+    dest: /etc/systemd/system/dogsapp.service
+  notify: reload the system daemon
+
+- name: enable and start the dogsapp service
+  become: yes
+  service: 
+    name: dogsapp
+    enabled: yes
+    state: started
+
+- name: change /home/dogsapp folder permission
+  become: yes
+  file:
+    path: /home/dogsapp
+    mode: 0755
+
+- name: remove the existing app folder 
+  become: yes
+  file:
+    path: /home/dogsapp/app
+    state: absent
+
+- name: cloning the files from git
+  become: yes
+  git: 
+    repo: 'https://github.com/seana7a7/node-express-mongodb-example.git'
+    dest: /home/dogsapp/app
+
+- name: install packages in app folder
+  become: yes
+  npm:
+    path: /home/dogsapp/app/
+
+- name: remove the existing app.js in app folder
+  become: yes
+  file:
+    path: /home/dogsapp/app/app.js
+    state: absent
+
+- name: provision the server configuration file
+  become: yes
+  template:
+    src: app.js
+    dest: /home/dogsapp/app/app.js
+  notify: restart the dogsapp service

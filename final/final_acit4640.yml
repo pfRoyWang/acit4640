@@ -1,0 +1,51 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+    - import_role:
+        name: aws
+        tasks_from: main
+      tags:
+        - provision
+        - never
+    - include_role:
+        name: aws
+      tags:
+        - provision
+    - import_role:
+        name: aws
+        tasks_from: info
+      tags:
+        - info
+        - never
+    - import_role:
+        name: aws
+        tasks_from: cleanup
+      tags:
+        - cleanup
+        - never    
+    
+
+- hosts: aws_ec2
+  gather_facts: false
+  tasks:
+    - include_role:
+        name: dogsapp
+        tasks_from: main
+      tags: 
+        - deployment
+    - import_role:
+        name: dogsapp
+        tasks_from: main
+      tags:
+        - deployment
+        - never
+    - import_role:
+        name: dogsapp
+        tasks_from: info
+      tags:
+        - info
+        - never
+
+

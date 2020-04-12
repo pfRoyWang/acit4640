@@ -13,3 +13,5 @@ module06/base_4640.box
 >>>>>>> 788b1dce400fd99f0a26a99275258964bb4b64b6
 vagrant_ansible/base_4640.box
 vagrant_ansible/todoapp_roles.retry
+ansible_aws
+final/aws_access_keys

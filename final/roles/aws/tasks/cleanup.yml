@@ -1,0 +1,70 @@
+---
+- name: gather info about EC2 instance
+  ec2_instance:
+    region: "{{ aws_region }}"
+    filters:
+      tag:Name: "{{ ec2_instance_name }}"
+      instance-state-name: running
+  register: ec2_info_data
+
+- name: set vpc_id as variable
+  set_fact:
+    vpc_id: "{{ ec2_info_data.instances[0].vpc_id}}"
+
+- debug:
+    msg: "{{ vpc_id }}"
+
+- name: Terminate instance
+  ec2:
+    state: absent
+    instance_ids: "{{ ec2_info_data.instance_ids }}"
+    region: "{{ aws_region }}"
+    wait: yes
+
+- name: disassociate an elastic IP
+  ec2_eip:
+    region: "{{ aws_region }}"
+    device_id: "{{ ec2_info_data.instance_ids }}"
+    state: absent
+
+- name: Terminate security group
+  ec2_group:
+    name: "{{ group_name }}"
+    state: absent
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ aws_region }}"
+
+- name: Terminate routing table
+  ec2_vpc_route_table:
+    tags:
+      Name: "{{ route_name }}"
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc_id }}"
+    state: absent
+
+
+- name: Terminate internet gateway
+  ec2_vpc_igw:
+    vpc_id: "{{ vpc_id }}"
+    tags:
+      Name: "{{ igw_name }}"
+    state: absent
+    region: "{{ aws_region }}"
+
+- name: Terminate subnet
+  ec2_vpc_subnet:
+    az: us-west-2a
+    region: "{{ aws_region }}"
+    cidr: 10.46.10.0/24
+    state: absent
+    vpc_id: "{{ vpc_id  }}"
+    tags:
+      Name: "{{ subnet_name }}"
+
+
+- name: Terminate vpc
+  ec2_vpc_net:
+    name: "{{ vpc_name }}"
+    cidr_block: 10.46.0.0/16
+    region: "{{ aws_region }}"
+    state: absent
