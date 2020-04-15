@@ -2,7 +2,7 @@
 - name: create VPC
   ec2_vpc_net: 
     cidr_block: 10.46.0.0/16
-    name: FINAL_VPC
+    name: "{{ vpc_name }}"
     region: "{{ aws_region }}"
     state: present
   register: vpc_data
@@ -14,20 +14,20 @@
     state: present
     vpc_id: "{{ vpc_data.vpc.id }}"
     tags:
-      Name: FINAL_SUBNET
+      Name: "{{ subnet_name }}"
   register: subnet_data
 - name: add internet gateway to VPC
   ec2_vpc_igw:
     vpc_id: "{{ vpc_data.vpc.id }}"
     tags:
-      Name: FINAL_IGW
+      Name: "{{ igw_name }}"
     state: present
     region: "{{ aws_region }}"
   register: igw_data
 - name: add routing table
   ec2_vpc_route_table:
     tags:
-      Name: FINAL_ROUTE
+      Name: "{{ route_name }}"
     region: "{{ aws_region }}"
     vpc_id: "{{ vpc_data.vpc.id }}"
     subnets: "{{ subnet_data.subnet.id }}"
@@ -38,7 +38,7 @@
   register: route_table_data
 - name: add security group
   ec2_group:
-    name: FINAL_SECURITY_GROUP
+    name: "{{ group_name }}"
     state: present
     vpc_id: "{{ vpc_data.vpc.id }}"
     region: "{{ aws_region }}"

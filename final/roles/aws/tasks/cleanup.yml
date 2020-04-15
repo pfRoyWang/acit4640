@@ -26,6 +26,8 @@
     region: "{{ aws_region }}"
     device_id: "{{ ec2_info_data.instance_ids }}"
     state: absent
+    release_on_disassociation: yes
+
 
 - name: Terminate security group
   ec2_group:

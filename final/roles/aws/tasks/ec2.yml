@@ -22,9 +22,13 @@
   ec2_eip:
     device_id: "{{ ec2_data.tagged_instances[0].id }}"
     region: "{{ aws_region }}"
+    release_on_disassociation: yes
   register: eip_data
 - name: output the elastic ip
   debug:
     msg: "{{ eip_data.public_ip }}"
 - name: refresh Ansible inventory
   meta: refresh_inventory
+- name: Pause and wait for SSH to come up
+  pause:
+    minutes: 2

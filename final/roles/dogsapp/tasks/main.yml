@@ -1,10 +1,4 @@
 ---
-- name: update all packages
-  become: yes
-  yum:
-    name: '*'
-    state: latest
-
 - name: add epel packages
   become: yes
   yum:

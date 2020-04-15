@@ -1,5 +1,5 @@
 ---
-- name: gather info about EC2 instance
+- name: gather info about server ip
   ec2_instance:
     region: "{{ aws_region }}"
     filters:
@@ -8,4 +8,4 @@
   register: ec2_info_data
 - name: show the server status
   debug:
-    msg: "The server is running at: {{ ec2_info_data.instances[0].public_ip_address }}"
+    msg: "The dogsapp server is running at: {{ ec2_info_data.instances[0].public_ip_address }}:3000"

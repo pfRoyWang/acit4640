@@ -48,4 +48,19 @@
         - info
         - never
 
-
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+    - import_role:
+        name: aws
+        tasks_from: server_ip
+      tags:
+        - deployment
+        - never
+    - include_role:
+        name: aws
+        tasks_from: server_ip
+      tags:
+        - deployment
+        
